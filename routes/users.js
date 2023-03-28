@@ -1,6 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
-const { User } = require("../schemas/users");
+const { User } = require("../models/users");
 const router = express.Router();
 
 router.get("/", (req, res) => {res.send({health: "ok"})})
