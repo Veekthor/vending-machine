@@ -2,6 +2,8 @@ const auth = require("../middleware/auth");
 const { Product } = require("../models/products");
 const validateobjectId = require("../middleware/validateObjectId");
 const express = require("express");
+const { User } = require("../models/users");
+const getUser = require("../middleware/getUser");
 const router = express.Router();
 
 router.get("/", auth, async(req, res) => {
@@ -61,5 +63,61 @@ router.delete("/:id", async(req, res) => {
     product = await Product.findOneAndDelete({_id: product._id});
     res.json(product);
 })
+
+router.post('/buy', auth, getUser, async (req, res) => {
+    try {
+      const { productId, amount } = req.body;
+      if(!productId || !amount) return res.status(400).json({error: true, message: "productId and amount are required"})
+  
+      const product = await Product.findById(productId);
+  
+      const totalCost = product.cost * amount;
+  
+      const user = req.fetchedUser;
+  
+      if (user.deposit < totalCost) {
+        return res.status(400).json({ error: 'Insufficient deposit' });
+      }
+  
+      product.amountAvailable -= amount;
+      await product.save();
+  
+      const change = user.deposit - totalCost;
+  
+      let changeInCoins = [0, 0, 0, 0, 0];
+      let remainingChange = change;
+      while (remainingChange > 0) {
+        if (remainingChange >= 100) {
+          changeInCoins[4]++;
+          remainingChange -= 100;
+        } else if (remainingChange >= 50) {
+          changeInCoins[3]++;
+          remainingChange -= 50;
+        } else if (remainingChange >= 20) {
+          changeInCoins[2]++;
+          remainingChange -= 20;
+        } else if (remainingChange >= 10) {
+          changeInCoins[1]++;
+          remainingChange -= 10;
+        } else {
+          changeInCoins[0]++;
+          remainingChange -= 5;
+        }
+      }
+  
+      user.deposit = change;
+      await user.save();
+  
+      res.json({
+        message: 'Purchase successful',
+        totalSpent: totalCost,
+        product,
+        change: changeInCoins
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
 
 module.exports = router;

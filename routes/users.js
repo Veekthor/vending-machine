@@ -76,7 +76,25 @@ router.post("/deposit", auth, getUser, async(req, res) => {
 
     user.deposit += coin;
     user = await user.save();
-    res.json({ message: `Deposited ${coin} cents into account` });
-})
+    res.json({ message: `Deposited ${coin} cents into account`, data: user });
+});
+
+router.post('/resetDeposit', auth, async (req, res, next) => {
+    const { id: userId } = req.user; 
+    
+    try {
+      const user = await User.findById(userId);
+      user.deposit = 0;
+      await user.save();
+      
+      res.json({
+        message: 'Deposit reset successful.',
+        data: user
+      });
+    } catch (err) {
+      console.error(err);
+      next(err)
+    }
+});
 
 module.exports = router;
