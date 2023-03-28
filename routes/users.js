@@ -23,10 +23,9 @@ router.post("/", async (req, res, next) => {
             password: req.body.password,
             role: req.body.role,
         }
-        if(req.body.deposit) userData.deposit = req.body.deposit;
+        // if(req.body.deposit) userData.deposit = req.body.deposit;
     
         user = new User(userData);
-        console.log(user.validateSync());
     
         await user.save();
     

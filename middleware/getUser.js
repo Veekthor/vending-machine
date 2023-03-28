@@ -1,5 +1,4 @@
 const { User } = require("../models/users");
-// Middleware function to get a user by id
 async function getUser(req, res, next) {
     let user;
     try {
