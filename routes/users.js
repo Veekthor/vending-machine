@@ -18,7 +18,7 @@ router.get("/:id", auth, validateObjectId, async (req, res) => {
     res.send(user);
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/create", async (req, res, next) => {
     try{
         let user = await User.findOne({ username: req.body.username});
         if(user) return res.status(400).send({
@@ -52,7 +52,7 @@ router.post("/", async (req, res, next) => {
     }
 })
 
-router.put("/:id", auth, validateObjectId, async (req, res) => {
+router.put("/update/:id", auth, validateObjectId, async (req, res) => {
     let user = await User.findById(req.params.id);
     if(!user) {
         res.status(400)
@@ -77,15 +77,13 @@ router.put("/:id", auth, validateObjectId, async (req, res) => {
     return res.send(user);
 })
 
-router.delete("/:id", auth, validateObjectId, async (req, res) => {
+router.delete("/delete/:id", auth, validateObjectId, async (req, res) => {
     let user = await User.findById(req.params.id);
     if(!user) {
         res.status(400).send({error: true, msg:'User with given ID does not exist'});
-
         return;
     };
     console.log(req.user)
-    if(req.user.username !== user.username) return res.status(401).send({error: true, msg: "Unauthorised"});
 
     user = await User.findByIdAndDelete(req.params.id);
     delete user.password;

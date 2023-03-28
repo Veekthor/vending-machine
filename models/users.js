@@ -17,9 +17,33 @@ const userSchema = new mongoose.Schema({
         maxlength: 1024
     },
     deposit: {
-        type: Number,
-        default: 0,
-        min: 0
+        type: {
+            five: {
+                type: Number,
+                min: 0,
+                default: 0
+            },
+            ten: {
+                type: Number,
+                min: 0,
+                default: 0
+            },
+            twenty: {
+                type: Number,
+                min: 0,
+                default: 0
+            },
+            fifty: {
+                type: Number,
+                min: 0,
+                default: 0
+            },
+            hundred: {
+                type: Number,
+                min: 0,
+                default: 0
+            },
+        }
     },
     role: {
         type: String,
