@@ -6,8 +6,6 @@ const validateObjectId = require("../middleware/validateObjectId");
 const getUser = require("../middleware/getUser");
 const router = express.Router();
 
-router.get("/", (req, res) => {res.send({health: "ok"})})
-
 router.get("/:id", auth, validateObjectId, async (req, res) => {
     const user = await User.findById(req.params.id);
     if(!user) {
@@ -19,7 +17,7 @@ router.get("/:id", auth, validateObjectId, async (req, res) => {
     res.send(user);
 });
 
-router.post("/create", async (req, res, next) => {
+router.post("/", async (req, res, next) => {
     try{
         let user = await User.findOne({ username: req.body.username});
         if(user) return res.status(400).send({
@@ -55,7 +53,6 @@ router.put("/update/:id", auth, validateObjectId, getUser, async (req, res) => {
     const userData = {
         username: req.body.username,
         role: req.body.role,
-        deposit: req.body.deposit,
     }
 
     user = {
@@ -67,17 +64,26 @@ router.put("/update/:id", auth, validateObjectId, getUser, async (req, res) => {
     return res.send(user);
 })
 
-router.delete("/delete/:id", auth, validateObjectId, async (req, res) => {
-    let user = await User.findById(req.params.id);
-    if(!user) {
-        res.status(400).send({error: true, msg:'User with given ID does not exist'});
-        return;
-    };
-    console.log(req.user)
+router.delete('/:id', auth, getUser, async (req, res) => {
+    try {
+      await req.fetchedUser.remove();
+      res.json({ message: 'User deleted successfully' });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+});
 
-    user = await User.findByIdAndDelete(req.params.id);
-    delete user.password;
-    res.send(user);
+router.post("/deposit", auth, getUser, async(req, res) => {
+    let user = req.fetchedUser;
+    if(user.role !== "buyer") return res.status(403).send({error:true, message: 'User is not a buyer'})
+    const coin = req.body.coin;
+    if (![5, 10, 20, 50, 100].includes(coin)) {
+      return res.status(400).json({ message: 'Invalid coin' });
+    }
+
+    user.deposit += coin;
+    user = await user.save();
+    res.json({ message: `Deposited ${coin} cents into account` });
 })
 
 module.exports = router;

@@ -15,36 +15,12 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true,
         minlength: 5,
-        maxlength: 1024
+        maxlength: 100
     },
     deposit: {
-        type: {
-            five: {
-                type: Number,
-                min: 0,
-                default: 0
-            },
-            ten: {
-                type: Number,
-                min: 0,
-                default: 0
-            },
-            twenty: {
-                type: Number,
-                min: 0,
-                default: 0
-            },
-            fifty: {
-                type: Number,
-                min: 0,
-                default: 0
-            },
-            hundred: {
-                type: Number,
-                min: 0,
-                default: 0
-            },
-        }
+        type: Number,
+        min: 0,
+        default: 0,
     },
     role: {
         type: String,
