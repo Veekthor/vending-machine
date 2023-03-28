@@ -1,9 +1,22 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const { User } = require("../models/users");
+const auth = require("../middleware/auth");
+const validateObjectId = require("../middleware/validateObjectId");
 const router = express.Router();
 
 router.get("/", (req, res) => {res.send({health: "ok"})})
+
+router.get("/:id", auth, validateObjectId, async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if(!user) {
+        res.status(400)
+        .send('User with given ID does not exist');
+
+        return;
+    };
+    res.send(user);
+});
 
 router.post("/", async (req, res, next) => {
     try{
@@ -37,6 +50,46 @@ router.post("/", async (req, res, next) => {
     } catch(err) {
         next(err)
     }
+})
+
+router.put("/:id", auth, validateObjectId, async (req, res) => {
+    let user = await User.findById(req.params.id);
+    if(!user) {
+        res.status(400)
+        .send('User with given ID does not exist');
+
+        return;
+    };
+    console.log(req.user)
+    if(req.user.username !== user.username) return res.status(401).send({error: true, msg: "Unauthorised"});
+    const userData = {
+        username: req.body.username,
+        role: req.body.role,
+        deposit: req.body.deposit,
+    }
+
+    user = {
+        ...user,
+        ...userData,
+    }
+
+    await user.save();
+    return res.send(user);
+})
+
+router.delete("/:id", auth, validateObjectId, async (req, res) => {
+    let user = await User.findById(req.params.id);
+    if(!user) {
+        res.status(400).send({error: true, msg:'User with given ID does not exist'});
+
+        return;
+    };
+    console.log(req.user)
+    if(req.user.username !== user.username) return res.status(401).send({error: true, msg: "Unauthorised"});
+
+    user = await User.findByIdAndDelete(req.params.id);
+    delete user.password;
+    res.send(user);
 })
 
 module.exports = router;
