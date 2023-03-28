@@ -5,7 +5,7 @@ const app = express();
 require("./routes")(app);
 require("./db")();
 app.get("/", (req, res) => {
-    res.send({
+    res.json({
         health: "OK"
     })
 })

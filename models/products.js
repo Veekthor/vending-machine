@@ -12,10 +12,10 @@ const productSchema = new Schema({
         required: true,
         min: 0,
         validate: {
-            validator: v => !(v % 5), //Check if multiple of 5
+            validator: v => !(v % 5),
             message: props => `${props.path} should be a multiple of 5`
         }
-    }, //(should be in multiples of 5)
+    },
     productName: {
         type: String,
         required: true,

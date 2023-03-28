@@ -6,23 +6,16 @@ const validateObjectId = require("../middleware/validateObjectId");
 const getUser = require("../middleware/getUser");
 const router = express.Router();
 
-router.get("/:id", auth, validateObjectId, async (req, res) => {
-    const user = await User.findById(req.params.id);
-    if(!user) {
-        res.status(400)
-        .send('User with given ID does not exist');
-
-        return;
-    };
-    res.send(user);
+router.get("/:id", auth, validateObjectId, getUser, async (req, res) => {
+    res.json(req.fetchedUser);
 });
 
 router.post("/", async (req, res, next) => {
     try{
         let user = await User.findOne({ username: req.body.username});
-        if(user) return res.status(400).send({
+        if(user) return res.status(400).json({
             error: true,
-            msg: "User already exists",
+            message: "User already exists",
         });
     
         const userData = {
@@ -47,9 +40,9 @@ router.post("/", async (req, res, next) => {
     }
 })
 
-router.put("/update/:id", auth, validateObjectId, getUser, async (req, res) => {
+router.put("/:id", auth, validateObjectId, getUser, async (req, res) => {
     let user = req.fetchedUser;
-    if(req.user.username !== user.username) return res.status(401).send({error: true, msg: "Unauthorised"});
+    if(req.user.username !== user.username) return res.status(401).json({error: true, message: "Unauthorised"});
     const userData = {
         username: req.body.username,
         role: req.body.role,
@@ -61,7 +54,7 @@ router.put("/update/:id", auth, validateObjectId, getUser, async (req, res) => {
     }
 
     await user.save();
-    return res.send(user);
+    return res.json(user);
 })
 
 router.delete('/:id', auth, getUser, async (req, res) => {
@@ -75,7 +68,7 @@ router.delete('/:id', auth, getUser, async (req, res) => {
 
 router.post("/deposit", auth, getUser, async(req, res) => {
     let user = req.fetchedUser;
-    if(user.role !== "buyer") return res.status(403).send({error:true, message: 'User is not a buyer'})
+    if(user.role !== "buyer") return res.status(403).json({error:true, message: 'User is not a buyer'})
     const coin = req.body.coin;
     if (![5, 10, 20, 50, 100].includes(coin)) {
       return res.status(400).json({ message: 'Invalid coin' });
