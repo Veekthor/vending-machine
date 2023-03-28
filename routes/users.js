@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const { User } = require("../models/users");
 const auth = require("../middleware/auth");
 const validateObjectId = require("../middleware/validateObjectId");
+const getUser = require("../middleware/getUser");
 const router = express.Router();
 
 router.get("/", (req, res) => {res.send({health: "ok"})})
@@ -36,31 +37,20 @@ router.post("/create", async (req, res, next) => {
         user = new User(userData);
         console.log(user.validateSync());
     
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-    
         await user.save();
     
         const token = user.generateAuthToken();
-        res.header('x-auth-token', token).send({
-            _id: user._id,
-            username: user.username,
-            role: user.role
+        res.status(201).json({
+            message: "User Created successfully",
+            token,
         });
     } catch(err) {
         next(err)
     }
 })
 
-router.put("/update/:id", auth, validateObjectId, async (req, res) => {
-    let user = await User.findById(req.params.id);
-    if(!user) {
-        res.status(400)
-        .send('User with given ID does not exist');
-
-        return;
-    };
-    console.log(req.user)
+router.put("/update/:id", auth, validateObjectId, getUser, async (req, res) => {
+    let user = req.fetchedUser;
     if(req.user.username !== user.username) return res.status(401).send({error: true, msg: "Unauthorised"});
     const userData = {
         username: req.body.username,

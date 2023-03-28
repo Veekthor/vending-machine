@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const auth = (req, res, next) => {
-    const token = req.header('x-auth-token');
+    const token = req.headers.authorization.replace("Bearer ", "");
     if(!token) return res.status(401).send({error: true, msg: 'Token not provided'});
 
     try {
