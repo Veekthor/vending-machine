@@ -50,6 +50,11 @@ userSchema.pre('save', function(next) {
   });
 });
 
+userSchema.statics.isUsernameUnique = async function(username) {
+  const user = await this.findOne({username});
+  return user === null;
+}
+
 userSchema.methods.comparePassword = function(candidatePassword, cb) {
   bcrypt.compare(candidatePassword, this.password, (err, isMatch) => {
     if (err) return cb(err);

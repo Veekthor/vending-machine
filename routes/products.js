@@ -4,6 +4,7 @@ const validateobjectId = require("../middleware/validateObjectId");
 const express = require("express");
 const { User } = require("../models/users");
 const getUser = require("../middleware/getUser");
+const asyncWrap = require("../middleware/asyncWrap");
 const router = express.Router();
 
 router.get("/", auth, async(req, res) => {
@@ -35,25 +36,18 @@ router.post("/", auth, async(req, res, next) => {
     }
 })
 
-router.put("/:id", auth, validateobjectId, async(req, res) => {
-    let product = await Product.findById(req.params.id);
-    if(!product) return res.status(404).json({error: true, message: "Product Not Found"});
-    if(!req.user || req.user.id !== product.sellerId) return res.status(401).json({error: true, message: "Product can only be updated by the seller"});
-    
-    let { productName, cost, amountAvailable } = req.body;
-    const productData = {
-        productName,
-        cost,
-        amountAvailable,
-    }
-    product = {
-        ...product,
-        ...productData,
-    }
-
-    product = await product.save();
-    res.send(product);
-})
+router.put("/:id", auth, validateobjectId, asyncWrap(async(req, res) => {
+  let product = await Product.findById(req.params.id);
+  if(!product) return res.status(404).json({error: true, message: "Product Not Found"});
+  if(!req.user || req.user.id !== product.sellerId) return res.status(401).json({error: true, message: "Product can only be updated by the seller"});
+  
+  let { productName, cost, amountAvailable } = req.body;
+  if(productName) product.productName = productName;
+  if(cost) product.cost = cost;
+  if(amountAvailable) product.amountAvailable = amountAvailable;
+  await product.save();
+  res.json(product);
+}))
 
 router.delete("/:id", async(req, res) => {
     let product = await Product.findById(req.params.id);
@@ -116,7 +110,7 @@ router.post('/buy', auth, getUser, async (req, res) => {
       });
     } catch (err) {
       console.error(err);
-      res.status(500).json({ error: 'Server error' });
+      res.status(500).json({ error: err.message});
     }
   });
 
