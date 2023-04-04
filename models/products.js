@@ -40,15 +40,21 @@ const productSchema = new Schema({
     amountAvailable: {
         type: Number,
         min: 0,
+        max: 500,
         default: 0,
+        validate : {
+          validator : Number.isInteger,
+          message   : '{VALUE} is not an integer value'
+        }
     },
     cost: {
         type: Number,
         required: true,
         min: 0,
+        max: 1_000_000,
         validate: {
             validator: v => !(v % 5),
-            message: props => `${props.path} should be a multiple of 5`
+            message: props => `${props.path} should be a multiple of 5`,
         }
     },
     productName: {

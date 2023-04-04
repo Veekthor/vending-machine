@@ -135,7 +135,12 @@ const userSchema = new mongoose.Schema({
     deposit: {
         type: Number,
         min: 0,
+        max: 1_000_000,
         default: 0,
+        validate : {
+          validator : Number.isInteger,
+          message   : '{VALUE} is not an integer value',
+        },
     },
     role: {
         type: String,
