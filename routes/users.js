@@ -136,7 +136,7 @@ router.post("/", async (req, res, next) => {
  *     summary: Update user's details
  *     tags: [Users]
  *     security:
- *       - bearerToken: []
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: userId
@@ -279,7 +279,7 @@ router.delete('/:id', auth, getUser, async (req, res) => {
  *     summary: Deposit coin into user's account
  *     tags: [Users]
  *     security:
- *       - bearerToken: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -342,7 +342,7 @@ router.post("/deposit", auth, getUser, async(req, res) => {
  *     summary: Reset user's deposit to 0
  *     tags: [Users]
  *     security:
- *       - bearerToken: []
+ *       - bearerAuth: []
  *     responses:
  *       '200':
  *         content:
