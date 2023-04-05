@@ -55,9 +55,9 @@ const router = express.Router();
  */
 
 router.get("/:id", auth, validateObjectId, getUser, async (req, res) => {
-    const fetchedUser = req.fetchedUser.toObject();
+    const fetchedUser = req.fetchedUser;
     if(req.user.id !== fetchedUser.id) return res.status(403).json({error: true, message: "Cannot fetch another user's data"})
-    let {password: _, ...user} = fetchedUser;
+    let {password: _, ...user} = fetchedUser.toObject();
     res.json(user);
 });
 
@@ -372,7 +372,7 @@ router.post("/deposit", auth, getUser, async(req, res) => {
  *         $ref: '#/components/responses/UnauthorizedError'
  */
 
-router.post('/resetDeposit', auth, async (req, res, next) => {
+router.post('/resetDeposit', auth, getUser, async (req, res, next) => {
     const { id: userId } = req.user; 
     
     try {
