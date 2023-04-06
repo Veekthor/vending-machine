@@ -10,7 +10,7 @@ const router = express.Router();
 router.get("/", auth, async(req, res) => {
     const products = await Product.find();
     res.json(products);
-})
+});
 
 router.get("/:id", auth, validateobjectId, async(req, res) => {
     const product = await Product.findById(req.params.id);
@@ -18,10 +18,11 @@ router.get("/:id", auth, validateobjectId, async(req, res) => {
     res.json(product);
 })
 
-router.post("/", auth, async(req, res, next) => {
-    if(req.user.role !== "seller") return res.status(403).json({error: true, message: "User is not a seller"})
+router.post("/", auth, getUser, async(req, res, next) => {
+    if(req.fetchedUser.role !== "seller") return res.status(403).json({error: true, message: "User is not a seller"})
     try {
         let { productName, cost, amountAvailable, sellerId } = req.body;
+        if(req.fetchedUser.id !== sellerId) return res.status(403).json({ error: true, message: "Provide correct sellerId"})
         const productData = {
             productName,
             cost,
@@ -34,29 +35,29 @@ router.post("/", auth, async(req, res, next) => {
     } catch (error) {
         next(error)
     }
-})
+});
 
 router.put("/:id", auth, validateobjectId, asyncWrap(async(req, res) => {
   let product = await Product.findById(req.params.id);
   if(!product) return res.status(404).json({error: true, message: "Product Not Found"});
-  if(!req.user || req.user.id !== product.sellerId) return res.status(401).json({error: true, message: "Product can only be updated by the seller"});
+  if(!req.user || req.user.id !== product.sellerId.toString()) return res.status(401).json({error: true, message: "Product can only be updated by the seller"});
   
   let { productName, cost, amountAvailable } = req.body;
   if(productName) product.productName = productName;
   if(cost) product.cost = cost;
   if(amountAvailable) product.amountAvailable = amountAvailable;
   await product.save();
-  res.json(product);
-}))
+  res.json({ message: "Product Updated successfully", product });
+}));
 
-router.delete("/:id", async(req, res) => {
+router.delete("/:id", auth, asyncWrap(async(req, res) => {
     let product = await Product.findById(req.params.id);
     if(!product) return res.status(404).json({error: true, message: "Product Not Found"});
-    if(!req.user || req.user._id !== product.sellerId) return res.status(401).json({error: true, message: "User is not the seller"})
+    if(!req.user || req.user.id !== product.sellerId.toString()) return res.status(401).json({error: true, message: "User is not the seller"})
     
     product = await Product.findOneAndDelete({_id: product._id});
-    res.json(product);
-})
+    res.json({ message: "Product deleted Successfully", product });
+}));
 
 router.post('/buy', auth, getUser, async (req, res) => {
     try {
@@ -64,13 +65,15 @@ router.post('/buy', auth, getUser, async (req, res) => {
       if(!productId || !amount) return res.status(400).json({error: true, message: "productId and amount are required"})
   
       const product = await Product.findById(productId);
-  
+      if(!product) return res.status(404).send({ error: true, message: "Product not found"});
+      if(product.amountAvailable < amount) return res.status(400)
+        .json({ error: true, message: 'Amount of product available is less than requested'});
       const totalCost = product.cost * amount;
   
       const user = req.fetchedUser;
   
       if (user.deposit < totalCost) {
-        return res.status(400).json({ error: 'Insufficient deposit' });
+        return res.status(400).json({ error: true, message: 'Insufficient balance' });
       }
   
       product.amountAvailable -= amount;
