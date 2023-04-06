@@ -18,4 +18,4 @@ $ npm start
 
 ### Usage & Demo
 
-Coming soon
+Visit https://vending-machine-vr6q.onrender.com/docs/
